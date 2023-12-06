@@ -2,21 +2,27 @@ class Api::V0::MarketsController < ApplicationController
   before_action :set_market, only: [:show]
 
   def index 
-    render json: MarketSerializer.new(Market.all) , status: :ok
+    markets = Market.all
+    if markets.empty?
+      render json: { error: 'No markets found' }, status: :not_found
+    else
+      render json: MarketSerializer.new(markets), status: :ok
+    end
   end
 
   def show
-    @market = Market.find(params[:id])
-    render json: MarketSerializer.new(@market).serializable_hash
+    if @market
+      render json: MarketSerializer.new(@market).serializable_hash, status: :ok
+    else
+      render json: { errors: [{ detail: "Couldn't find Market with 'id'=#{params[:id]}" }] }, status: :not_found
+    end
   end
+
+  
 
   private 
 
-  def set_market  
+  def set_market
     @market = Market.find_by(id: params[:id])
-
-    unless @market 
-      render json: { error: "Market not found" }, status: :not_found
-    end
   end
 end

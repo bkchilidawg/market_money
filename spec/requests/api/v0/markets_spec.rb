@@ -18,10 +18,10 @@ RSpec.describe "API V0 Markets", type: :request do
       expect(json_response["data"]).to be_an(Array)
       expect(json_response["data"].length).to eq(1)
 
-      expect(json_response["data"][0]["attributes"]["id"]).to eq(market1.id)
+      expect(json_response["data"][0]["id"]).to eq(market1.id.to_s)
       expect(json_response["data"][0]["attributes"]["name"]).to eq(market1.name)
       expect(json_response["data"][0]["attributes"]["vendor_count"]).to eq(7)
-
+  
       markets = JSON.parse(response.body, symbolize_names: true)
 
       expect(markets[:data].count).to eq(1)
@@ -63,7 +63,7 @@ RSpec.describe "API V0 Markets", type: :request do
  describe "GET /api/v0/markets/:id" do
    it "returns a market with vendor_count for a valid id" do
     market1 = create(:market)
-    99.times do
+    7.times do
       vendor = create(:vendor)
       create(:market_vendor, market: market1, vendor: vendor)
     end
@@ -72,25 +72,34 @@ RSpec.describe "API V0 Markets", type: :request do
 
     expect(response).to have_http_status(:ok)
 
+
     json_response = JSON.parse(response.body)
-    json_response = JSON.parse(response.body)
-  expect(json_response["data"]["id"]).to eq(market1.id.to_s) 
-  expect(json_response["data"]["attributes"]["name"]).to eq(market1.name)
-  expect(json_response["data"]["attributes"]["street"]).to eq(market1.street)
-  expect(json_response["data"]["attributes"]["city"]).to eq(market1.city)
-  expect(json_response["data"]["attributes"]["county"]).to eq(market1.county)
-  expect(json_response["data"]["attributes"]["state"]).to eq(market1.state)
-  expect(json_response["data"]["attributes"]["zip"]).to eq(market1.zip)
-  expect(json_response["data"]["attributes"]["vendor_count"]).to eq(7)
+    expect(json_response["data"]["id"]).to eq(market1.id.to_s) 
+    expect(json_response["data"]["attributes"]["name"]).to eq(market1.name)
+    expect(json_response["data"]["attributes"]["street"]).to eq(market1.street)
+    expect(json_response["data"]["attributes"]["city"]).to eq(market1.city)
+    expect(json_response["data"]["attributes"]["county"]).to eq(market1.county)
+    expect(json_response["data"]["attributes"]["state"]).to eq(market1.state)
+    expect(json_response["data"]["attributes"]["zip"]).to eq(market1.zip)
+    expect(json_response["data"]["attributes"]["vendor_count"]).to eq(7)
   end
+  
 
     it "returns a 404 status and error message for an invalid id" do
-      get "/api/v0/markets/999", headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+      get "/api/v0/markets/123123123123", headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
 
       expect(response).to have_http_status(:not_found)
 
-      json_response = JSON.parse(response.body)
-      expect(json_response["error"]).to eq("Market not found")
+      if response.body.present?
+        json_response = JSON.parse(response.body)
+        if json_response["errors"].present?
+          expect(json_response["errors"].first["detail"]).to eq("Couldn't find Market with 'id'=123123123123")
+        else
+          fail "Response body does not contain 'errors' key"
+        end
+      else
+        fail "Response body is empty"
+      end
     end
   end
 end
