@@ -102,4 +102,39 @@ RSpec.describe "API V0 Markets", type: :request do
       end
     end
   end
+
+   describe "GET /api/v0/markets/:id/vendors" do
+    it "returns vendors for a valid market id" do
+      market = create(:market)
+      vendors = [] # Define vendors array
+      7.times do
+        vendor = create(:vendor)
+        create(:market_vendor, market: market, vendor: vendor)
+        vendors << vendor # Add vendor to vendors array
+      end
+
+      get "/api/v0/markets/#{market.id}/vendors", headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+
+      expect(response).to have_http_status(:ok)
+
+      json_response = JSON.parse(response.body)
+
+      expect(json_response["data"]).to be_an(Array)
+      expect(json_response["data"].length).to eq(7)
+
+      # Add more expectations based on your Vendor model attributes
+      expect(json_response["data"][0]["id"]).to eq(vendors[0].id.to_s)
+      expect(json_response["data"][0]["attributes"]["name"]).to eq(vendors[0].name)
+      # ... (similar for other attributes)
+    end
+
+    it "returns a 404 status and error message for an invalid market id" do
+      get "/api/v0/markets/999/vendors", headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+
+      expect(response).to have_http_status(:not_found)
+
+      json_response = JSON.parse(response.body)
+      expect(json_response["errors"][0]["detail"]).to eq("Couldn't find Market with 'id'=999")
+    end
+  end
 end

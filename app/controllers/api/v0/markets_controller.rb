@@ -1,5 +1,5 @@
 class Api::V0::MarketsController < ApplicationController
-  before_action :set_market, only: [:show]
+  before_action :set_market, only: [:show, :vendors]
 
   def index 
     markets = Market.all
@@ -17,8 +17,14 @@ class Api::V0::MarketsController < ApplicationController
       render json: { errors: [{ detail: "Couldn't find Market with 'id'=#{params[:id]}" }] }, status: :not_found
     end
   end
-
+def vendors
   
+  if @market
+    render json: VendorSerializer.new(@market.vendors).serializable_hash, status: :ok
+  else
+    render json: { errors: [{ detail: "Couldn't find Market with 'id'=#{params[:id]}" }] }, status: :not_found
+  end
+end
 
   private 
 
