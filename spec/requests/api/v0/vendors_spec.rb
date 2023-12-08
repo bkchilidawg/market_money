@@ -46,7 +46,6 @@ RSpec.describe "GET /api/v0/vendors/:id", type: :request do
 
       json_response = JSON.parse(response.body)
 
-# require 'pry'; binding.pry
       expect(json_response["errors"].first["detail"]).to include("Name can't be blank")
     end
   end
@@ -108,7 +107,6 @@ RSpec.describe "GET /api/v0/vendors/:id", type: :request do
       expect(response).to have_http_status(:not_found)
 
       json_response = JSON.parse(response.body)
-      #require 'pry'; binding.pry
       expect(json_response["errors"].first["message"]).to eq("Couldn't find Vendor with 'id'=#{invalid_id}")
     end
   end

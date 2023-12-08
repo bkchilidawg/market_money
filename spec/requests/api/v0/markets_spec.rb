@@ -136,4 +136,64 @@ RSpec.describe "API V0 Markets", type: :request do
       expect(json_response["errors"][0]["detail"]).to eq("Couldn't find Market with 'id'=999")
     end
   end
+
+  describe 'GET /api/v0/markets/search' do
+    let!(:market) { create(:market, name: 'Nob Hill Growers Market', city: 'Albuquerque', state: 'New Mexico') }
+
+    it 'returns a 200 status and the correct market data when valid parameters are sent' do
+      get '/api/v0/markets/search', params: { city: 'Albuquerque', state: 'New Mexico', name: 'Nob Hill Growers Market' }, headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+
+      expect(response).to have_http_status(:ok)
+
+      json_response = JSON.parse(response.body)
+      expect(json_response["data"][0]["name"]).to eq(market.name)  
+    end
+
+
+    it 'returns a 422 status and an error message when invalid parameters are sent' do
+      get '/api/v0/markets/search', params: { city: 'Albuquerque' }, headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+
+      json_response = JSON.parse(response.body)
+      expect(json_response["errors"][0]["detail"]).to eq("Invalid set of parameters. Please provide a valid set of parameters to perform a search with this endpoint.")
+    end
+
+    it 'returns a 200 status and an empty array when valid parameters are sent but no markets are found' do
+      get '/api/v0/markets/search', params: { state: 'California' }, headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+
+      expect(response).to have_http_status(:ok)
+
+      json_response = JSON.parse(response.body)
+      expect(json_response["data"]).to be_empty
+    end
+  end
+
+  describe 'GET #nearest_atms' do
+    let(:market) { create(:market) } 
+
+    context 'when market exists' do
+      before do
+        stub_request(:get, "https://api.tomtom.com/search/2/categorySearch/ATM.json?lat=#{market.lat}&lon=#{market.lon}&categorySet=7397&view=Unified&relatedPois=child&key=IJY6QIxeLaV66xyJminIzUTp8AM3wHyA")
+          .to_return(status: 200, body: { results: [] }.to_json)
+      end
+
+      it 'returns status code 200' do
+        get "/api/v0/markets/#{market.id}/nearest_atms"
+        expect(response).to have_http_status(200)
+      end
+    end
+
+    context 'when market does not exist' do
+      it 'returns status code 404' do
+        get "/api/v0/markets/999/nearest_atms" 
+        expect(response).to have_http_status(404)
+      end
+
+      it 'returns a not found message' do
+        get "/api/v0/markets/999/nearest_atms" 
+        expect(response.body).to match(/Couldn't find Market/)
+      end
+    end
+  end
 end

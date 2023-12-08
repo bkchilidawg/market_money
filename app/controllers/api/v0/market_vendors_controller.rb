@@ -5,7 +5,6 @@ class Api::V0::MarketVendorsController < ApplicationController
     render json: { errors: [{ detail: exception.message }] }, status: :not_found
   end
 
-  # POST /api/v0/market_vendors
   def create
     market_id = params[:market_id]
     vendor_id = params[:vendor_id]
@@ -29,15 +28,12 @@ class Api::V0::MarketVendorsController < ApplicationController
     end
   end
   
-  # DELETE /api/v0/market_vendors/:id
-def destroy
-  begin
-    market_vendor = MarketVendor.find_by!(market_id: params[:market_id], vendor_id: params[:vendor_id])
-    render(json: market_vendor.destroy!, status: 204)
-  rescue ActiveRecord::RecordNotFound
-    render json: { errors: [{ detail: "Couldn't find MarketVendor with 'market_id'=#{params[:market_id]} and 'vendor_id'=#{params[:vendor_id]}" }] }, status: :not_found
+  def destroy
+    begin
+      market_vendor = MarketVendor.find_by!(market_id: params[:market_id], vendor_id: params[:vendor_id])
+      render(json: market_vendor.destroy!, status: 204)
+    rescue ActiveRecord::RecordNotFound
+      render json: { errors: [{ detail: "Couldn't find MarketVendor with 'market_id'=#{params[:market_id]} and 'vendor_id'=#{params[:vendor_id]}" }] }, status: :not_found
+    end
   end
-end
-
-  
 end
